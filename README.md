@@ -9,7 +9,7 @@ erase all data  (exclude qspi flash) and protection, and programm only full flas
 ```
 
 #### how to make jlink from bluepill:
-https://mysensors-rus.github.io/Blue-pill-to-JLink/ https://github.com/GCY/JLINK-ARM-OB
+https://mysensors-rus.github.io/Blue-pill-to-JLink/ https://github.com/GCY/JLINK-ARM-OB http://forum.easyelectronics.ru/viewtopic.php?p=651817#p651817
 
 #### how to get full flash:
 https://github.com/atc1441/ESP32_nRF52_SWD https://limitedresults.com/2020/06/nrf52-debug-resurrection-approtect-bypass/
