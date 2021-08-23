@@ -1,5 +1,3 @@
-test fw based on zephyr os
-
 #### build:
 ```
 west update

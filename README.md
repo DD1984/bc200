@@ -1,5 +1,8 @@
 bc200 - bike computer from aliexpress
 
+#### bc200_fw:
+test fw based on zephyr os
+
 #### unlock debugging:
 jlink connected to SDO and SCLK testpoints  
 erase all data  (exclude qspi flash) and protection, and programm only full flash exclude protection
@@ -23,6 +26,6 @@ faketime -f "x0.1" ./nrfjprog --jdll <full path>/JLink_Linux_V752a_x86_64/libjli
 #### usbfw_decode:
 util for decrypt and encrypt firmware and font for usb upgrade
 
-#### fw:
+#### original fw:
 fw start from 0x31000  
 spi flash contain font from 0 offset and fatfs disk from 0x300000 offset
