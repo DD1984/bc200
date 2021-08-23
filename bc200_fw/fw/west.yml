@@ -1,0 +1,14 @@
+manifest:
+  remotes:
+    - name: nrfconnect
+      url-base: https://github.com/nrfconnect
+
+  # Please add items below based on alphabetical order.
+  # These dependencies may need updating if new features are added to the firmware.
+  projects:
+    - name: sdk-nrf
+      remote: nrfconnect
+      path: nrf
+      import: true
+  self:
+    path: fw

@@ -1,0 +1,7 @@
+[manifest]
+path = fw
+file = west.yml
+
+[zephyr]
+base = zephyr
+

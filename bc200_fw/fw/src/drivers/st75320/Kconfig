@@ -1,0 +1,12 @@
+config ST75320
+	bool "ST75320 display driver"
+	help
+	  Enable driver for ST75320 display driver.
+
+config ST75320_INIT_PRIORITY
+	int "Default init priority for st75230 drivers"
+	default 89
+	help
+	  Must be upper then spi init priotity and lower then lvgl init priority
+
+source "$(ZEPHYR_ST75320_MODULE_DIR)/Kconfig.opts"
