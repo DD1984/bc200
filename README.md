@@ -7,8 +7,13 @@ test fw based on zephyr os
 jlink connected to SDO and SCLK testpoints  
 erase all data  (exclude qspi flash) and protection, and programm only full flash exclude protection
 ```
-./nrfjprog --jdll <full path>/JLink_Linux_V752a_x86_64/libjlinkarm.so -f NRF52 --log --recover
-./nrfjprog --jdll <full path>/JLink_Linux_V752a_x86_64/libjlinkarm.so -f NRF52 --log --program full_flash.bin
+nrfjprog -f NRF52 --log --recover
+nrfjprog -f NRF52 --log --program full_flash.bin
+```
+switch NFC antenna pins to GPIOs - used as buttons (first cmd enable write possibility to UICR,second - write needed value)
+```
+nrfjprog/nrfjprog -f NRF52 --ramwr 0x4001E504 --val 0x00000001
+nrfjprog/nrfjprog -f NRF52 --ramwr 0x1000120C --val 0xfffffffe
 ```
 
 #### how to make jlink from bluepill:
