@@ -1,0 +1,42 @@
+config POLL_BTNS
+	bool "poll buttons"
+
+if POLL_BTNS
+
+config POLL_BTNS_DEV_NAME
+	string "dev name"
+	default "POLL_BTNS"
+
+choice
+	prompt "pool buttons log level"
+
+config POLL_BTNS_LOG_LEVEL_CRIT
+	bool "Critical"
+config POLL_BTNS_LOG_LEVEL_WARN
+	bool "Warning"
+config POLL_BTNS_LOG_LEVEL_NOTE
+	bool "Notice"
+config POLL_BTNS_LOG_LEVEL_INFO
+	bool "Informational"
+config POLL_BTNS_LOG_LEVEL_DEBG
+	bool "Debug"
+endchoice
+
+config POLL_BTNS_LOG_LEVEL
+	int
+	default 1 if POLL_BTNS_LOG_LEVEL_CRIT
+	default 2 if POLL_BTNS_LOG_LEVEL_WARN
+	default 3 if POLL_BTNS_LOG_LEVEL_NOTE
+	default 4 if POLL_BTNS_LOG_LEVEL_INFO
+	default 5 if POLL_BTNS_LOG_LEVEL_DEBG
+	default 0
+
+config POLL_BTNS_INIT_PRIORITY
+	int "Default init priority for this drivers"
+	default 91
+	help
+	  Must be uppper then lvgl init priority
+
+source "$(ZEPHYR_POLL_BTNS_MODULE_DIR)/Kconfig.opts"
+
+endif

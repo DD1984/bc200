@@ -48,7 +48,7 @@ LOG_MODULE_REGISTER(display_st75320, CONFIG_DISPLAY_LOG_LEVEL);
 
 #define CONTRAST_DEF 0x111
 
-uint8_t st75320_btg160240_init_seq[] =
+static const uint8_t st75320_btg160240_init_seq[] =
 {
 	U8X8_C(ST75320_CMD_DISP_OFF),		// Display OFF
 	U8X8_CA(0xEA, 0x00), 				// Power Discharge Control, Discharge OFF
@@ -100,7 +100,7 @@ uint8_t st75320_btg160240_init_seq[] =
 	U8X8_CAAA(0xF0, 0x35, 0x92, 0x50),
 	U8X8_C(0xFC),
 
-	U8X8_C(ST75320_CMD_DISP_ON),		//Display ON  
+	//U8X8_C(ST75320_CMD_DISP_ON),		//Display ON
 
 	U8X8_END() 							/* end of sequence */
 };
@@ -159,7 +159,7 @@ static void st75320_data_tx(struct st75320_data *data, uint8_t d)
 	spi_write(data->spi_dev, &data->config->spi_config, &tx_bufs);
 }
 
-static void st75320_send_sequence(struct st75320_data *data, uint8_t *d)
+static void st75320_send_sequence(struct st75320_data *data, const uint8_t *d)
 {
 	uint8_t cmd;
 

@@ -6,6 +6,27 @@
 			label = "Green LED 0";
 		};
 	};
+
+	buttons {
+		compatible = "gpio-keys";
+		btn0: key3 {
+			gpios = <&gpio0 9 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "left top";
+		};
+		btn1: key1 {
+			gpios = <&gpio0 10 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "left bottom";
+		};
+		btn2: key {
+			gpios = <&gpio1 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "right top";
+		};
+		btn3: key4 {
+			gpios = <&gpio1 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "right bottom";
+		};
+	};
+
 };
 
 &uart0 {

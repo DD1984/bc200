@@ -1,0 +1,6 @@
+if POLL_BTNS
+
+config GPIO
+	default y
+
+endif
