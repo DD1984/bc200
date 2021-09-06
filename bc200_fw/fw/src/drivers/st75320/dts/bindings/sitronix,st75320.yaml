@@ -33,10 +33,10 @@ properties:
 
         Dedicated pin for switch witch enable/disable lcd module poswer supply.
 
-    backlight-gpios:
-      type: phandle-array
+    backlight:
+      type: phandle
       required: false
-      description: backlight control pin.
+      description: link to pwm for backlight ctrl.
 
     height:
       type: int

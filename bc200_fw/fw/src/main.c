@@ -14,13 +14,6 @@
 #include <lvgl.h>
 #include <usb/usb_device.h>
 
-/* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE DT_ALIAS(led0)
-
-#define LED0	DT_GPIO_LABEL(LED0_NODE, gpios)
-#define PIN	DT_GPIO_PIN(LED0_NODE, gpios)
-#define FLAGS	DT_GPIO_FLAGS(LED0_NODE, gpios)
-
 
 #define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
 #include <logging/log.h>
@@ -45,11 +38,6 @@ void gui_refresh_thread(void *dummy1, void *dummy2, void *dummy3)
 
 void main(void)
 {
-	const struct device *dev;
-
-	dev = device_get_binding(LED0);
-	gpio_pin_configure(dev, 0x1A, GPIO_OUTPUT_ACTIVE);
-
 	LOG_INF("hello world");
 
 	const struct device *display_dev;
@@ -61,6 +49,8 @@ void main(void)
 	}
 
 	display_blanking_off(display_dev);
+	display_set_brightness(display_dev, 4 << 4); // 0-7 levels
+	display_set_contrast(display_dev, 3 << 4); // 0-7 levels
 
 	k_thread_create(&gui_refresh_thread_data, gui_refresh_thread_stack_area, K_THREAD_STACK_SIZEOF(gui_refresh_thread_stack_area),
 				gui_refresh_thread, NULL, NULL, NULL, PRIORITY, 0, K_FOREVER);

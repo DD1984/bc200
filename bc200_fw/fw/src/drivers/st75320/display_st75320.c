@@ -13,10 +13,11 @@
 
 #include <zephyr.h>
 #include <device.h>
+#include <devicetree.h>
 #include <drivers/spi.h>
 #include <drivers/gpio.h>
-#include <sys/byteorder.h>
 #include <drivers/display.h>
+#include <drivers/pwm.h>
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(display_st75320, CONFIG_DISPLAY_LOG_LEVEL);
@@ -111,6 +112,13 @@ struct st75320_gpio_data {
 	gpio_pin_t pin;
 };
 
+#define BKL_PWM_PERIOD 100
+
+struct st75320_bkl_data {
+	const struct device *dev;
+	uint32_t channel;
+};
+
 struct st75320_config {
 	const char *spi_name;
 	const char *cs_name;
@@ -118,6 +126,7 @@ struct st75320_config {
 	struct st75320_gpio_data cmd_data;
 	struct st75320_gpio_data reset;
 	struct st75320_gpio_data power;
+	struct st75320_bkl_data backlight;
 	uint16_t height;
 	uint16_t width;
 };
@@ -296,13 +305,38 @@ static void *st75320_get_framebuffer(const struct device *dev)
 static int st75320_set_brightness(const struct device *dev,
 				  const uint8_t brightness)
 {
-	return -ENOTSUP;
+	const uint8_t levels[8] = {0, 14, 28, 42, 56, 70, 84, 100};
+	struct st75320_config *config = (struct st75320_config *)dev->config;
+
+	if (!device_is_ready(config->backlight.dev))
+		return -ENOTSUP;
+
+	uint32_t pulse = BKL_PWM_PERIOD * levels[brightness >> 4] / 100;
+
+	LOG_INF("brightness: in-%d -> pwm-%d/%d", brightness, pulse, BKL_PWM_PERIOD);
+
+	pwm_pin_set_cycles(config->backlight.dev, config->backlight.channel, BKL_PWM_PERIOD, pulse, PWM_POLARITY_NORMAL);
+
+	return 0;
 }
 
 static int st75320_set_contrast(const struct device *dev,
 				const uint8_t contrast)
 {
-	return -ENOTSUP;
+	const uint16_t levels[8] = {
+		CONTRAST_DEF - 18, CONTRAST_DEF - 12, CONTRAST_DEF - 6,
+		CONTRAST_DEF,
+		CONTRAST_DEF + 6, CONTRAST_DEF + 12, CONTRAST_DEF + 18, CONTRAST_DEF + 24,
+	};
+	struct st75320_data *data = (struct st75320_data *)dev->data;
+
+	LOG_INF("contrast: in-%d -> %d", contrast, levels[contrast >> 4]);
+
+	st75320_cmd_tx(data, 0x81);
+	st75320_data_tx(data, levels[contrast >> 4] & 0xff);
+	st75320_data_tx(data, (levels[contrast >> 4] >> 8) & 3);
+
+	return 0;
 }
 
 static void st75320_get_capabilities(const struct device *dev,
@@ -555,6 +589,9 @@ static const struct display_driver_api st75320_api = {
 		.power.flags = UTIL_AND(					\
 			DT_INST_HAS_PROP(inst, power_gpios),			\
 			DT_INST_GPIO_FLAGS(inst, power_gpios)),			\
+		\
+		.backlight.dev = DEVICE_DT_GET(DT_PHANDLE_BY_IDX(DT_CHILD(DT_INST_PHANDLE(inst, backlight), led0), pwms, 0)),	\
+		.backlight.channel = DT_PHA_BY_IDX(DT_CHILD(DT_INST_PHANDLE(inst, backlight), led0), pwms, 0, channel),	\
 		\
 		.width = DT_INST_PROP(inst, width),				\
 		.height = DT_INST_PROP(inst, height),				\
