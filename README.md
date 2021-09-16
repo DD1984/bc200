@@ -1,7 +1,12 @@
 bc200 - bike computer from aliexpress
 
 #### bc200_fw:
-test fw based on zephyr os
+test fw based on zephyr os  
+works:
+- [x] lcd display + contrast + backlight + lvgl graphic lib
+- [x] buttons
+- [x] qspi flash + fatfs + usb mass storage
+- [ ] fw upgrade via usb usign original image format
 
 #### unlock debugging:
 jlink connected to SDO and SCLK testpoints  
@@ -33,4 +38,4 @@ util for decrypt and encrypt firmware and font for usb upgrade
 
 #### original fw:
 fw start from 0x31000  
-spi flash contain font from 0 offset and fatfs disk from 0x300000 offset
+spi flash contain font from 0 offset and fatfs disk from 0x380000 offset
