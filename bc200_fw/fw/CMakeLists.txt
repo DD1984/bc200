@@ -14,5 +14,6 @@ target_sources(app PRIVATE
 	src/main.c
 	src/draw_menu.c
 	src/demo.c
+	src/disk.c
 )
 

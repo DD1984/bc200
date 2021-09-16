@@ -64,3 +64,45 @@
 	status = "okay";
 	ch0-pin = <0x1A>;
 };
+
+&qspi {
+	status = "okay";
+	sck-pin = <0x14>;
+	io-pins = <0x16>, <0x18>, <0x10>, <0x17>;
+	csn-pins = <0x20>;
+
+	/delete-node/mx25r6435f@0;
+
+	gd25q127c@0 {
+		compatible = "nordic,qspi-nor";
+		reg = <0>;
+		writeoc = "pp4io";
+		readoc = "read4io";
+		sck-frequency = <8000000>;
+		label = "GD25Q127C";
+		jedec-id = [c8 40 18];
+
+		sfdp-bfp = [
+			e5 20 f1 ff  ff ff ff 07  44 eb 08 6b  08 3b 42 bb
+			ee ff ff ff  ff ff 00 ff  ff ff 00 eb  0c 20 0f 52
+			10 d8 00 ff
+		];
+
+		size = <0x8000000>; /* in bits */
+
+		has-dpd;
+		t-enter-dpd = <10000>;
+		t-exit-dpd = <35000>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "ext_flash";
+				reg = <0x00380000 0x00C80000>;
+			};
+		};
+	};
+};
