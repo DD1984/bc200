@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -7,6 +8,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <limits.h>
+#include <libgen.h>
 
 typedef enum {
 	M_NONE,
@@ -19,8 +21,8 @@ typedef enum {
 void show_usage(void)
 {
 	printf(
-		"\t-i   input file\n"
-		"\t-o   output file suffix - "OUTFILE_PREF"<suffix>\n"
+		"\t-i   input file (binary format)\n"
+		"\t-o   output file; \""OUTFILE_PREF"\" prefix will be added (only for encode)\n"
 		"\t-d   decode\n"
 		"\t-e   encode\n"
 	);
@@ -50,7 +52,7 @@ unsigned short crc16(unsigned short init, unsigned char *buf, size_t len)
 	return crc16;
 }
 
-int open_files(const char *infile, const char *outfile, int *fd_in, int *fd_out)
+int open_files(const char *infile, const char *outfile, int *fd_in, int *fd_out, const char *file_prefix)
 {
 	*fd_in = open(infile, O_RDONLY);
 	if (*fd_in < 0) {
@@ -62,7 +64,20 @@ int open_files(const char *infile, const char *outfile, int *fd_in, int *fd_out)
 	fstat(*fd_in, &st);
 
 	char buf[PATH_MAX];
-	sprintf(buf, OUTFILE_PREF"%s", outfile);
+	strcpy(buf, outfile);
+
+	if (file_prefix) {
+		char *dir = strdup(outfile);
+		char *name = strdup(outfile);
+
+		if (dir && name)
+			sprintf(buf, "%s/%s%s", dirname(dir), file_prefix, basename(name));
+
+		if (dir)
+			free(dir);
+		if (name)
+			free(name);
+	}
 
 	if (access(buf, F_OK) == 0)
 		unlink(buf);
@@ -85,7 +100,7 @@ int decode(const char *infile, const char *outfile)
 	int fd_out = -1;
 	int ret = -1;
 
-	if (open_files(infile, outfile, &fd_in, &fd_out))
+	if (open_files(infile, outfile, &fd_in, &fd_out, NULL))
 		goto out;
 
 	ret = 0;
@@ -135,7 +150,7 @@ int encode(const char *infile, const char *outfile)
 	int fd_out = -1;
 	int ret = -1;
 
-	if (open_files(infile, outfile, &fd_in, &fd_out))
+	if (open_files(infile, outfile, &fd_in, &fd_out, OUTFILE_PREF))
 		goto out;
 
 	ret = 0;
