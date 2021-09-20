@@ -106,3 +106,50 @@
 		};
 	};
 };
+
+&flash0 {
+	partitions {
+		/delete-node/partition@0;
+		/delete-node/partition@c000;
+		/delete-node/partition@73000;
+		/delete-node/partition@da000;
+		/delete-node/partition@f8000;
+
+		partition@0 {
+			label = "mbr";
+			reg = < 0x0 0x1000 >;
+		};
+		partition@1000 {
+			label = "softdevice";
+			reg = < 0x1000 0x30000 >;
+		};
+		slot0_partition: partition@31000 {
+			label = "image-0";
+			reg = < 0x31000 0x62000 >;
+		};
+		storage_partition: partition@93000 {
+			label = "storage";
+			reg = < 0x93000 0x2000 >;
+		};
+		slot1_partition: partition@95000 {
+			label = "image-1";
+			reg = < 0x95000 0x62000 >;
+		};
+		partition@f7000 {
+			label = "hw-ver";
+			reg = < 0xf7000 0x1000 >;
+		};
+		boot_partition: partition@f8000 {
+			label = "bootloader";
+			reg = < 0xf8000 0x6000 >;
+		};
+		partition@fe000 {
+			label = "boot-settings";
+			reg = < 0xfe000 0x1000 >;
+		};
+		partition@ff000 {
+			label = "boot-settings-backup";
+			reg = < 0xff000 0x1000 >;
+		};
+	};
+};

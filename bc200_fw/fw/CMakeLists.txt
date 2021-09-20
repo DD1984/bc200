@@ -17,3 +17,14 @@ target_sources(app PRIVATE
 	src/disk.c
 )
 
+add_custom_target(decode ALL
+	COMMAND make
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../usbfw_decode
+)
+
+add_custom_target(jump ALL
+	COMMAND CROSS_PREFIX=${CROSS_COMPILE} make
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../jump
+)
+
+message("hello")
