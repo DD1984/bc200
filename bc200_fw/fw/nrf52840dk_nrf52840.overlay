@@ -76,7 +76,7 @@
 	gd25q127c@0 {
 		compatible = "nordic,qspi-nor";
 		reg = <0>;
-		writeoc = "pp4io";
+		writeoc = "pp4o";
 		readoc = "read4io";
 		sck-frequency = <8000000>;
 		label = "GD25Q127C";
