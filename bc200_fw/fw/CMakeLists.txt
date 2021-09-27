@@ -14,7 +14,8 @@ target_sources(app PRIVATE
 	src/main.c
 	src/draw_menu.c
 	src/demo.c
-	src/disk.c
+	src/fw_upgrade.c
+	src/decode_utils.c
 )
 
 add_custom_target(decode ALL

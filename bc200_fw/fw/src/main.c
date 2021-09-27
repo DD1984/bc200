@@ -12,8 +12,6 @@
 #include <drivers/gpio.h>
 #include <drivers/display.h>
 #include <lvgl.h>
-#include <usb/usb_device.h>
-
 
 
 
@@ -38,21 +36,14 @@ void gui_refresh_thread(void *dummy1, void *dummy2, void *dummy3)
 	}
 }
 
+
+
 void main(void)
 {
 	LOG_INF("hello world");
 
-	extern void setup_disk(void);
-	setup_disk();
-
-	int ret = usb_enable(NULL);
-	if (ret != 0) {
-		LOG_ERR("Failed to enable USB");
-		return;
-	}
-
-	LOG_INF("The device is put in USB mass storage mode.\n");
-
+	extern void fw_upgrade_task_start(void);
+	fw_upgrade_task_start();
 
 	const struct device *display_dev;
 	display_dev = device_get_binding(CONFIG_LVGL_DISPLAY_DEV_NAME);

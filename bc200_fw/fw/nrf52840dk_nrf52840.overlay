@@ -99,8 +99,8 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			partition@0 {
-				label = "ext_flash";
+			partition@380000 {
+				label = "ext-flash";
 				reg = <0x00380000 0x00C80000>;
 			};
 		};
