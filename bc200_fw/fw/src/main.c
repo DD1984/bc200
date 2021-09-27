@@ -19,7 +19,7 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app);
 
-#define PRIORITY 7
+#define PRIORITY 6
 
 K_THREAD_STACK_DEFINE(gui_refresh_thread_stack_area, 8192);
 static struct k_thread gui_refresh_thread_data;
@@ -36,14 +36,15 @@ void gui_refresh_thread(void *dummy1, void *dummy2, void *dummy3)
 	}
 }
 
-
+lv_obj_t *upgr_lbl;
+void uprg_progress(const char *text)
+{
+	lv_label_set_text(upgr_lbl, text);
+}
 
 void main(void)
 {
 	LOG_INF("hello world");
-
-	extern void fw_upgrade_task_start(void);
-	fw_upgrade_task_start();
 
 	const struct device *display_dev;
 	display_dev = device_get_binding(CONFIG_LVGL_DISPLAY_DEV_NAME);
@@ -65,6 +66,13 @@ void main(void)
 
 	extern void draw_menu(void);
 	draw_menu();
+
+	upgr_lbl = lv_label_create(lv_scr_act(), NULL);
+	lv_obj_set_pos(upgr_lbl, 0, LV_VER_RES - 10);
+
+	extern void fw_upgrade_task_start(void);
+	fw_upgrade_task_start();
+
 
 	//extern void start_demo(void);
 	//start_demo();

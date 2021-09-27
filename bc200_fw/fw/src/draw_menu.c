@@ -28,7 +28,7 @@ void draw_menu(void)
 {
 	lv_obj_t *list = lv_list_create(lv_scr_act(), NULL);
 	lv_obj_set_width(list, LV_HOR_RES);
-	lv_obj_set_height(list, LV_VER_RES);
+	lv_obj_set_height(list, LV_VER_RES - 20);
 
 	lv_group_t * group = lv_group_create();
 	lv_group_add_obj(group, list);

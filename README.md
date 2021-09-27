@@ -6,7 +6,8 @@ works:
 - [x] lcd display + contrast + backlight + lvgl graphic lib
 - [x] buttons
 - [x] qspi flash + fatfs + usb mass storage
-- [ ] fw upgrade via usb usign original image format
+- [x] fw upgrade via usb usign original image format. upgrade possible in both direction orig fw <-> zephyr os fw
+- [ ] need to fix qspi flash speed
 
 #### unlock debugging:
 jlink connected to SDO and SCLK testpoints  

@@ -10,6 +10,8 @@
 //#include <sys/crc.h> todo: need to use system crc func
 #include <sys/reboot.h>
 
+extern void uprg_progress(const char *text);
+
 #include "decode_utils.h"
 #include "nrf_dfu_types.h"
 
@@ -109,6 +111,10 @@ static int upgrade(const char *file)
 		target_file_len += len - 4; // 4 - block cksum
 
 		crc32 = crc32_compute(buf, len - 4, &crc32);
+
+		char uprg_buf[64];
+		sprintf(uprg_buf, "Loading %zu bytes\n", target_file_len);
+		uprg_progress(uprg_buf);
 	}
 
 	flash_area_close(img1_fa);
@@ -210,10 +216,13 @@ static void usb_status_cb(enum usb_dc_status_code cb_status, const uint8_t *para
 	switch (cb_status) {
 		case USB_DC_DISCONNECTED:
 			LOG_INF("USB device disconnected");
+			uprg_progress("USB disconnected");
+
 			k_wakeup(fw_upgrade_tid);
 		break;
 		case USB_DC_CONNECTED:
 			LOG_INF("USB device connected!!!");
+			uprg_progress("USB connected!\n");
 		break;
 		default:
 		break;
