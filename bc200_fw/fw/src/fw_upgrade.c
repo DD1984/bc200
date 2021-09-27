@@ -188,6 +188,7 @@ static int check_upgrade(void)
 		return -1;
 	}
 
+	ret = -1;
 	char *f = find_upgrade_file(&fs_mnt);
 	if (f) {
 		LOG_INF("upgrade file: %s", log_strdup(f));
