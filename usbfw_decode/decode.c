@@ -10,6 +10,8 @@
 #include <limits.h>
 #include <libgen.h>
 
+#include "decode_utils.h"
+
 typedef enum {
 	M_NONE,
 	M_DEC,
@@ -26,30 +28,6 @@ void show_usage(void)
 		"\t-d   decode\n"
 		"\t-e   encode\n"
 	);
-}
-
-unsigned short crc16_table[16] = {
-	0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
-	0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400
-};
-
-unsigned short crc16(unsigned short init, unsigned char *buf, size_t len)
-{
-	unsigned short crc16 = init;
-
-	for (size_t i = 0; i < len; i++) {
-		/* compute checksum of lower four bits of *p */
-		unsigned short r = crc16_table[crc16 & 0xf];
-		crc16 = (crc16 >> 4) & 0x0fff;
-		crc16 = crc16 ^ r ^ crc16_table[buf[i] & 0xf];
-
-		/* now compute checksum of upper four bits of *p */
-		r = crc16_table[crc16 & 0xf];
-		crc16 = (crc16 >> 4) & 0x0fff;
-		crc16 = crc16 ^ r ^ crc16_table[(buf[i] >> 4) & 0xf];
-	}
-
-	return crc16;
 }
 
 int open_files(const char *infile, const char *outfile, int *fd_in, int *fd_out, const char *file_prefix)
@@ -91,9 +69,6 @@ int open_files(const char *infile, const char *outfile, int *fd_in, int *fd_out,
 	return 0;
 }
 
-#define BLOCK_SIZE 512
-#define START_DIFF 0x00c8
-
 int decode(const char *infile, const char *outfile)
 {
 	int fd_in = -1;
@@ -113,26 +88,14 @@ int decode(const char *infile, const char *outfile)
 	ssize_t block_size;
 	while ((block_size = read(fd_in, buf, BLOCK_SIZE)) > 0) {
 
-		for (unsigned int i = 0; i < block_size; i++) {
-			unsigned int tmp = buf[i];
-			tmp -= diff;
-			buf[i] = tmp; //only one byte
-		}
-
-		unsigned int read_cksum = *(unsigned int *)(buf + block_size - 4);
-		unsigned short calc_cksum = crc16(diff, buf, block_size - 4);
-
-		if ((calc_cksum != (read_cksum & 0xffff)) || ((read_cksum >> 16) + (read_cksum & 0xffff) != 0xffff)) {
-			printf("decode error - 0x%08zx: block_size: 0x%03zx, cksum_read: 0x%08x, cksum_calc: 0x%04hx, diff: 0x%02hhx[%02hhx]\n",
-				addr, block_size - 4, read_cksum, calc_cksum, diff >> 8, diff & 0xff);
-
-			ret = -1;
-		}
+		ret = decode_block(&diff, buf, block_size);
+		if (ret)
+			printf("decode error - 0x%08zx: block_size: 0x%03zx, diff: 0x%02hhx[%02hhx]\n",
+				addr, block_size - 4, diff >> 8, diff & 0xff);
 
 		write(fd_out, buf, block_size - 4);
 
 		addr += block_size;
-		diff = read_cksum & 0xffff;
 	}
 
 out:
@@ -163,18 +126,9 @@ int encode(const char *infile, const char *outfile)
 	ssize_t block_size;
 	while ((block_size = read(fd_in, buf, BLOCK_SIZE - 4)) > 0) {
 
-		unsigned short calc_cksum = crc16(diff, buf, block_size);
-		*(unsigned int *)(buf + block_size) = ((0xffff - calc_cksum) << 16) | calc_cksum;
-
-		for (unsigned int i = 0; i < block_size + 4; i++) {
-			unsigned int tmp = buf[i];
-			tmp += diff;
-			buf[i] = tmp; //only one byte
-		}
+		encode_block(&diff, buf, block_size);
 
 		write(fd_out, buf, block_size + 4);
-
-		diff = calc_cksum;
 	}
 
 out:
