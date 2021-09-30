@@ -34,6 +34,7 @@ add_custom_target(usb_fw ALL
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../../usbfw_decode/decode -e -i ${CMAKE_CURRENT_BINARY_DIR}/zephyr/zephyr.bin -o ${CMAKE_CURRENT_BINARY_DIR}/zephyr/zephyr.bin
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/zephyr/zephyr.bin
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../usbfw_decode/decode
 	COMMENT "Making usb fw"
 )
+
+add_dependencies(usb_fw decode)
