@@ -1,7 +1,7 @@
 bc200 - bike computer from aliexpress
 
 #### bc200_fw:
-test fw based on zephyr os  
+test fw based on zephyr os ([build instrruction](https://github.com/DD1984/bc200/blob/master/bc200_fw/README.md))  
 works:
 - [x] lcd display + contrast + backlight + lvgl graphic lib
 - [x] buttons
@@ -18,15 +18,18 @@ nrfjprog -f NRF52 --log --program full_flash.bin
 ```
 switch NFC antenna pins to GPIOs - used as buttons (first cmd enable write possibility to UICR,second - write needed value)
 ```
-nrfjprog/nrfjprog -f NRF52 --ramwr 0x4001E504 --val 0x00000001
-nrfjprog/nrfjprog -f NRF52 --ramwr 0x1000120C --val 0xfffffffe
+nrfjprog -f NRF52 --ramwr 0x4001E504 --val 0x00000001
+nrfjprog -f NRF52 --ramwr 0x1000120C --val 0xfffffffe
 ```
 
 #### how to make jlink from bluepill:
-https://mysensors-rus.github.io/Blue-pill-to-JLink/ https://github.com/GCY/JLINK-ARM-OB http://forum.easyelectronics.ru/viewtopic.php?p=651817#p651817
+https://mysensors-rus.github.io/Blue-pill-to-JLink/  
+https://github.com/GCY/JLINK-ARM-OB  
+http://forum.easyelectronics.ru/viewtopic.php?p=651817#p651817
 
 #### how to get full flash:
-https://github.com/atc1441/ESP32_nRF52_SWD https://limitedresults.com/2020/06/nrf52-debug-resurrection-approtect-bypass/
+https://github.com/atc1441/ESP32_nRF52_SWD  
+https://limitedresults.com/2020/06/nrf52-debug-resurrection-approtect-bypass/
 
 #### reading qspi flash content:
 ```
