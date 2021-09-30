@@ -1,0 +1,12 @@
+offset   size
+0x00000  0x01000    mbr                   master boot record
+0x01000  0x30000    softdevice            nordic bluetooth and ant stack
+0x31000  0x62000    image-0               main, current working firmware
+0x93000  0x02000    storage               this may be place for storage user config 
+0x95000  0x62000    image-1               place where main fw write new fw
+0xf7000  0x01000    hw-ver                contain PCB revision string
+0xf8000  0x06000    bootloader            check crc of current fw and start it
+                                          if new fw exist - write new fw from image-1 to image-0
+                                          if fw is broken - stop in emergency mode - upgrade is available via bluetooth
+0xfe000  0x01000    boot-settings         contain crc of all firmwares, and command for upgrade new fw if it existed
+0xff000  0x01000    boot-settings-backup
