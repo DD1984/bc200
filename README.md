@@ -1,7 +1,19 @@
-bc200 - bike computer from aliexpress
+coospo bc200 - bike computer from [aliexpress](https://aliexpress.ru/item/4001156919018.html)
 
+#### spec:
+PCB revision: v5.4
+ - cpu: nrf52840 - cortex-m4 (integrated BLE, USB); 256kb ram; 1mb flash
+ - external flash: GD25Q127C - qspi 16mb nor flash
+ - display: BTG-160240D - monochrome, sunreadeble lcd with backlight have 160x240 resolution and based on ST75320 controller
+ - 4 buttons
+ - 1300mah lipo battery + charger
+ - 12mm piezo buzzer
+ - gps + glonass + beidou module
+ - hx3203 - light sensor
+ - qmp6988 - digital barometric pressure sensor
+ 
 #### bc200_fw:
-test fw based on zephyr os ([build instrruction](https://github.com/DD1984/bc200/blob/master/bc200_fw/README.md))  
+test fw based on zephyr os ([build instructions](https://github.com/DD1984/bc200/blob/master/bc200_fw/README.md))  
 works:
 - [x] lcd display + contrast + backlight + lvgl graphic lib
 - [x] buttons
