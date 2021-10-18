@@ -18,7 +18,7 @@ works:
 - [x] lcd display + contrast + backlight + lvgl graphic lib
 - [x] buttons
 - [x] qspi flash + fatfs + usb mass storage
-- [x] fw upgrade via usb usign original image format. upgrade possible in both direction orig fw <-> zephyr os fw
+- [x] fw upgrade via usb usign original image format. upgrade possible in both direction orig fw <-> zephyr os fw ([video of process](https://youtu.be/bRdI50IbiIM))
 - [ ] need to fix qspi flash speed
 
 #### unlock debugging:
