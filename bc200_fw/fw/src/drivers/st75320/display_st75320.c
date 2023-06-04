@@ -16,6 +16,7 @@
 #include <devicetree.h>
 #include <drivers/spi.h>
 #include <drivers/gpio.h>
+#include <zephyr/pm/device.h>
 #include <drivers/display.h>
 #include <drivers/pwm.h>
 
@@ -101,74 +102,81 @@ static const uint8_t st75320_btg160240_init_seq[] =
 	U8X8_CAAA(0xF0, 0x35, 0x92, 0x50),
 	U8X8_C(0xFC),
 
-	//U8X8_C(ST75320_CMD_DISP_ON),		//Display ON
+	U8X8_C(ST75320_CMD_DISP_ON),		//Display ON
 
 	U8X8_END() 							/* end of sequence */
 };
 
+/*
 struct st75320_gpio_data {
 	const char *const name;
 	gpio_dt_flags_t flags;
 	gpio_pin_t pin;
 };
+*/
 
 #define BKL_PWM_PERIOD 100
 
+/*
 struct st75320_bkl_data {
 	const struct device *dev;
 	uint32_t channel;
 };
+*/
 
 struct st75320_config {
+	struct spi_dt_spec bus;
+	struct gpio_dt_spec cmd_data;
+	struct gpio_dt_spec reset;
+	struct gpio_dt_spec power;
+	struct pwm_dt_spec backlight;
+
+/*
 	const char *spi_name;
 	const char *cs_name;
 	struct spi_config spi_config;
 	struct st75320_gpio_data cmd_data;
 	struct st75320_gpio_data reset;
 	struct st75320_gpio_data power;
-	struct st75320_bkl_data backlight;
+*/
+
 	uint16_t height;
 	uint16_t width;
 };
 
 struct st75320_data {
-	const struct st75320_config *config;
-	const struct device *spi_dev;
-	struct spi_cs_control cs_ctrl;
-	const struct device *cmd_data_dev;
-	const struct device *reset_dev;
-	const struct device *power_dev;
 	uint16_t x_offset;
 	uint16_t y_offset;
-#ifdef CONFIG_DEVICE_POWER_MANAGEMENT
-	uint32_t pm_state;
-#endif
 };
 
-static void st75320_set_cmd(struct st75320_data *data, int is_cmd)
+static void st75320_set_cmd(const struct device *dev, int is_cmd)
 {
-	gpio_pin_set(data->cmd_data_dev, data->config->cmd_data.pin, is_cmd);
+	const struct st75320_config *config = dev->config;
+
+	gpio_pin_set_dt(&config->cmd_data, is_cmd);
 }
 
-static void st75320_cmd_tx(struct st75320_data *data, uint8_t cmd)
+static void st75320_cmd_tx(const struct device *dev, uint8_t cmd)
 {
+	const struct st75320_config *config = dev->config;
 	struct spi_buf tx_buf = { .buf = &cmd, .len = 1 };
 	struct spi_buf_set tx_bufs = { .buffers = &tx_buf, .count = 1 };
 
-	st75320_set_cmd(data, 1);
-	spi_write(data->spi_dev, &data->config->spi_config, &tx_bufs);
+	st75320_set_cmd(dev, 1);
+	spi_write_dt(&config->bus, &tx_bufs);
 }
 
-static void st75320_data_tx(struct st75320_data *data, uint8_t d)
+static void st75320_data_tx(const struct device *dev, uint8_t d)
 {
+	const struct st75320_config *config = dev->config;
 	struct spi_buf tx_buf = { .buf = &d, .len = 1 };
 	struct spi_buf_set tx_bufs = { .buffers = &tx_buf, .count = 1 };
 
-	st75320_set_cmd(data, 0);
-	spi_write(data->spi_dev, &data->config->spi_config, &tx_bufs);
+	st75320_set_cmd(dev, 0);
+	spi_write_dt(&config->bus, &tx_bufs);
 }
 
-static void st75320_send_sequence(struct st75320_data *data, const uint8_t *d)
+static void st75320_send_sequence(const struct device *dev, const uint8_t *d)
 {
 	uint8_t cmd;
 
@@ -177,11 +185,11 @@ static void st75320_send_sequence(struct st75320_data *data, const uint8_t *d)
 		d++;
 		switch (cmd) {
 			case U8X8_MSG_CAD_SEND_CMD:
-				st75320_cmd_tx(data, *d);
+				st75320_cmd_tx(dev, *d);
 				d++;
 				break;
 			case U8X8_MSG_CAD_SEND_ARG:
-				st75320_data_tx(data, *d);
+				st75320_data_tx(dev, *d);
 				d++;
 				break;
 			case 0x0fe:
@@ -194,15 +202,17 @@ static void st75320_send_sequence(struct st75320_data *data, const uint8_t *d)
 	}
 }
 
-static int st75320_reset_display(struct st75320_data *data)
+static int st75320_reset_display(const struct device *dev)
 {
+	const struct st75320_config *config = dev->config;
+
 	LOG_DBG("Resetting display");
-	if (!data->config->reset.name)
+	if (!config->reset.port)
 		return -1;
 
-	gpio_pin_set(data->reset_dev, data->config->reset.pin, 1);
+	gpio_pin_set_dt(&config->reset, 1);
 	k_sleep(ST75320_RESET_TIME);
-	gpio_pin_set(data->reset_dev, data->config->reset.pin, 0);
+	gpio_pin_set_dt(&config->reset, 0);
 
 	k_sleep(ST75320_EXIT_SLEEP_TIME);
 
@@ -211,18 +221,14 @@ static int st75320_reset_display(struct st75320_data *data)
 
 static int st75320_blanking_on(const struct device *dev)
 {
-	struct st75320_data *data = (struct st75320_data *)dev->data;
-
-	st75320_cmd_tx(data, ST75320_CMD_DISP_OFF);
+	st75320_cmd_tx(dev, ST75320_CMD_DISP_OFF);
 
 	return 0;
 }
 
 static int st75320_blanking_off(const struct device *dev)
 {
-	struct st75320_data *data = (struct st75320_data *)dev->data;
-
-	st75320_cmd_tx(data, ST75320_CMD_DISP_ON);
+	st75320_cmd_tx(dev, ST75320_CMD_DISP_ON);
 
 	return 0;
 }
@@ -236,17 +242,19 @@ static int st75320_read(const struct device *dev,
 	return -ENOTSUP;
 }
 
-static void st75320_set_column_addr(struct st75320_data *data, uint16_t x)
+static void st75320_set_column_addr(const struct device *dev, uint16_t x)
 {
-	st75320_cmd_tx(data, ST75320_CMD_COLUMN_ADDR);
-	st75320_data_tx(data, x >> 8);
-	st75320_data_tx(data, x & 0xff);
+	st75320_cmd_tx(dev, ST75320_CMD_COLUMN_ADDR);
+	st75320_data_tx(dev, x >> 8);
+	st75320_data_tx(dev, x & 0xff);
 }
 
-static void st75320_set_page_addr(struct st75320_data *data, uint16_t y)
+static void st75320_set_page_addr(const struct device *dev, uint16_t y)
 {
-	st75320_cmd_tx(data, ST75320_CMD_PAGE_ADDR);
-	st75320_data_tx(data, ((y + data->y_offset) / 8) & 0xff);
+	struct st75320_data *data = dev->data;
+
+	st75320_cmd_tx(dev, ST75320_CMD_PAGE_ADDR);
+	st75320_data_tx(dev, ((y + data->y_offset) / 8) & 0xff);
 }
 
 static int st75320_write(const struct device *dev,
@@ -255,7 +263,8 @@ static int st75320_write(const struct device *dev,
 			 const struct display_buffer_descriptor *desc,
 			 const void *buf)
 {
-	struct st75320_data *data = (struct st75320_data *)dev->data;
+	const struct st75320_config *config = dev->config;
+	struct st75320_data *data = dev->data;
 	size_t buf_len;
 
 	if (desc->pitch < desc->width) {
@@ -283,15 +292,15 @@ static int st75320_write(const struct device *dev,
 		x, y, desc->pitch, desc->width, desc->height, buf_len);
 
 	for (uint16_t i = 0; i < desc->height; i += 8) {
-		st75320_set_column_addr(data, x + data->x_offset);
-		st75320_set_page_addr(data, y + data->y_offset + i);
+		st75320_set_column_addr(dev, x + data->x_offset);
+		st75320_set_page_addr(dev, y + data->y_offset + i);
 
-		st75320_cmd_tx(data, 0x1D);
-		st75320_set_cmd(data, 0);
+		st75320_cmd_tx(dev, 0x1D);
+		st75320_set_cmd(dev, 0);
 
 		struct spi_buf tx_buf = { .buf = (uint8_t *)buf + desc->pitch * (i / 8), .len = desc->pitch };
 		struct spi_buf_set tx_bufs = { .buffers = &tx_buf, .count = 1 };
-		spi_write(data->spi_dev, &data->config->spi_config, &tx_bufs);
+		spi_write_dt(&config->bus, &tx_bufs);
 	}
 
 	return 0;
@@ -305,17 +314,20 @@ static void *st75320_get_framebuffer(const struct device *dev)
 static int st75320_set_brightness(const struct device *dev,
 				  const uint8_t brightness)
 {
+	#define BKL_PWM_PERIOD 100
+
 	const uint8_t levels[8] = {0, 14, 28, 42, 56, 70, 84, 100};
-	struct st75320_config *config = (struct st75320_config *)dev->config;
+	struct st75320_config *config = dev->config;
 
 	if (!device_is_ready(config->backlight.dev))
 		return -ENOTSUP;
 
-	uint32_t pulse = BKL_PWM_PERIOD * levels[brightness >> 4] / 100;
+	uint32_t pulse = config->backlight.period * levels[brightness >> 4] / 100;
 
-	LOG_INF("brightness: in-%d -> pwm-%d/%d", brightness, pulse, BKL_PWM_PERIOD);
+	LOG_INF("brightness: in-%d -> pwm-%d/%d", brightness, pulse, config->backlight.period);
 
-	pwm_pin_set_cycles(config->backlight.dev, config->backlight.channel, BKL_PWM_PERIOD, pulse, PWM_POLARITY_NORMAL);
+	pwm_set_pulse_dt(&config->backlight, pulse);
+	//pwm_pin_set_cycles(config->backlight.dev, config->backlight.channel, BKL_PWM_PERIOD, pulse, PWM_POLARITY_NORMAL);
 
 	return 0;
 }
@@ -328,13 +340,12 @@ static int st75320_set_contrast(const struct device *dev,
 		CONTRAST_DEF,
 		CONTRAST_DEF + 6, CONTRAST_DEF + 12, CONTRAST_DEF + 18, CONTRAST_DEF + 24,
 	};
-	struct st75320_data *data = (struct st75320_data *)dev->data;
 
 	LOG_INF("contrast: in-%d -> %d", contrast, levels[contrast >> 4]);
 
-	st75320_cmd_tx(data, 0x81);
-	st75320_data_tx(data, levels[contrast >> 4] & 0xff);
-	st75320_data_tx(data, (levels[contrast >> 4] >> 8) & 3);
+	st75320_cmd_tx(dev, 0x81);
+	st75320_data_tx(dev, levels[contrast >> 4] & 0xff);
+	st75320_data_tx(dev, (levels[contrast >> 4] >> 8) & 3);
 
 	return 0;
 }
@@ -342,7 +353,7 @@ static int st75320_set_contrast(const struct device *dev,
 static void st75320_get_capabilities(const struct device *dev,
 				     struct display_capabilities *capabilities)
 {
-	struct st75320_config *config = (struct st75320_config *)dev->config;
+	struct st75320_config *config = dev->config;
 
 	memset(capabilities, 0, sizeof(struct display_capabilities));
 
@@ -380,105 +391,84 @@ static int st75320_set_orientation(const struct device *dev,
 	return -ENOTSUP;
 }
 
-static int st75320_lcd_init(struct st75320_data *data)
+static int st75320_lcd_init(const struct device *dev)
 {
-	st75320_send_sequence(data, st75320_btg160240_init_seq);
+	st75320_send_sequence(dev, st75320_btg160240_init_seq);
 
 	return 0;
 }
 
-static int st72320_pwr_pin_init(struct st75320_data *data)
+static void st72320_pwr_en(const struct device *dev, bool en)
 {
-	data->power_dev = NULL;
+	const struct st75320_config *config = dev->config;
 
-	if (!data->config->power.name)
-		return -1;
-
-	data->power_dev = device_get_binding(data->config->power.name);
-	if (data->power_dev == NULL)
-		return -1;
-
-	int ret = gpio_pin_configure(data->power_dev, data->config->power.pin,
-					 GPIO_OUTPUT_INACTIVE | data->config->power.flags);
-	if (ret)
-		return -1;
-
-	return 0;
-}
-
-static void st72320_pwr_en(struct st75320_data *data, bool en)
-{
-	if (!data->power_dev)
+	if (!config->power.port)
 		return;
 
 	if (en)
-		gpio_pin_set(data->power_dev, data->config->power.pin, 1);
+		gpio_pin_set_dt(&config->power, 1);
 	else
-		gpio_pin_set(data->power_dev, data->config->power.pin, 0);
+		gpio_pin_set_dt(&config->power, 0);
 }
 
 static int st75320_init(const struct device *dev)
 {
-	struct st75320_data *data = (struct st75320_data *)dev->data;
-	struct st75320_config *config = (struct st75320_config *)dev->config;
+	const struct st75320_config *config = dev->config;
 	int ret;
 
-	data->spi_dev = device_get_binding(config->spi_name);
-	if (data->spi_dev == NULL) {
-		LOG_ERR("Could not get SPI device for LCD");
+	if (!spi_is_ready(&config->bus)) {
+		LOG_ERR("SPI bus %s not ready", config->bus.bus->name);
 		return -ENODEV;
 	}
 
-	if (config->cs_name) {
-		data->cs_ctrl.gpio_dev = device_get_binding(config->cs_name);
-		if (data->cs_ctrl.gpio_dev == NULL) {
-			LOG_ERR("Could not get device for SPI CS");
-			return -ENODEV;
-		}
-	}
-
-	if (config->reset.name) {
-		data->reset_dev = device_get_binding(config->reset.name);
-		if (data->reset_dev == NULL) {
-			LOG_ERR("Could not get GPIO port for display reset");
+	if (config->reset.port != NULL) {
+		if (!device_is_ready(config->reset.port)) {
+			LOG_ERR("Reset GPIO port for display not ready");
 			return -ENODEV;
 		}
 
-		ret = gpio_pin_configure(data->reset_dev, config->reset.pin,
-					 GPIO_OUTPUT_INACTIVE | config->reset.flags);
+		ret = gpio_pin_configure_dt(&config->reset,
+					    GPIO_OUTPUT_INACTIVE);
 		if (ret) {
 			LOG_ERR("Couldn't configure reset pin");
 			return ret;
 		}
 	}
 
-	st72320_pwr_pin_init(data);
-	st72320_pwr_en(data, true);
+	if (config->power.port != NULL) {
+		if (!device_is_ready(config->power.port)) {
+			LOG_ERR("Power GPIO port for display not ready");
+			return -ENODEV;
+		}
 
-#ifdef CONFIG_DEVICE_POWER_MANAGEMENT
-	data->pm_state = PM_DEVICE_STATE_ACTIVE;
-#endif
+		ret = gpio_pin_configure_dt(&config->power,
+					    GPIO_OUTPUT_INACTIVE);
+		if (ret) {
+			LOG_ERR("Couldn't configure power pin");
+			return ret;
+		}
 
-	data->cmd_data_dev = device_get_binding(config->cmd_data.name);
-	if (data->cmd_data_dev == NULL) {
-		LOG_ERR("Could not get GPIO port for cmd/DATA port");
+		st72320_pwr_en(dev, true);
+	}
+
+	if (!device_is_ready(config->cmd_data.port)) {
+		LOG_ERR("cmd/DATA GPIO port not ready");
 		return -ENODEV;
 	}
 
-	ret = gpio_pin_configure(data->cmd_data_dev, config->cmd_data.pin,
-				 GPIO_OUTPUT | config->cmd_data.flags);
+	ret = gpio_pin_configure_dt(&config->cmd_data, GPIO_OUTPUT);
 	if (ret) {
 		LOG_ERR("Couldn't configure cmd/DATA pin");
 		return ret;
 	}
 
-	ret = st75320_reset_display(data);
+	ret = st75320_reset_display(dev);
 	if (ret < 0) {
 		LOG_ERR("Couldn't reset display");
 		return ret;
 	}
 
-	ret = st75320_lcd_init(data);
+	ret = st75320_lcd_init(dev);
 	if (ret < 0) {
 		LOG_ERR("Couldn't init LCD");
 		return ret;
@@ -486,55 +476,32 @@ static int st75320_init(const struct device *dev)
 
 	LOG_INF("LCD init done");
 
+	LOG_INF("backlight dev:%x channel:%d period: %d", config->backlight.dev, config->backlight.channel, config->backlight.period);
+
 	return 0;
 }
 
-#ifdef CONFIG_DEVICE_POWER_MANAGEMENT
-static int st75320_enter_sleep(struct st75320_data *data)
-{
-	//return st7735r_transmit(data, ST7735R_CMD_SLEEP_IN, NULL, 0);
-}
-
-static int st75320_pm_control(const struct device *dev, uint32_t ctrl_command,
-			      void *context, pm_device_cb cb, void *arg)
+#ifdef CONFIG_PM_DEVICE
+static int st75320_pm_action(const struct device *dev,
+			     enum pm_device_action action)
 {
 	int ret = 0;
-	struct st75320_data *data = (struct st75320_data *)dev->data;
 
-	switch (ctrl_command) {
-	case PM_DEVICE_STATE_SET:
-		if (*((uint32_t *)context) == PM_DEVICE_STATE_ACTIVE) {
-			ret = st75320_exit_sleep(data);
-			if (ret < 0) {
-				return ret;
-			}
-			data->pm_state = PM_DEVICE_STATE_ACTIVE;
-		} else {
-			ret = st75320_enter_sleep(data);
-			if (ret < 0) {
-				return ret;
-			}
-			data->pm_state = PM_DEVICE_STATE_LOW_POWER;
-		}
-
+	switch (action) {
+	case PM_DEVICE_ACTION_RESUME:
+		//ret = st7735r_exit_sleep(dev);
 		break;
-
-	case PM_DEVICE_STATE_GET:
-		*((uint32_t *)context) = data->pm_state;
-
+	case PM_DEVICE_ACTION_SUSPEND:
+		//ret = st7735r_transmit(dev, ST7735R_CMD_SLEEP_IN, NULL, 0);
 		break;
-
 	default:
-		ret = -EINVAL;
-	}
-
-	if (cb != NULL) {
-		cb(dev, ret, context, arg);
+		ret = -ENOTSUP;
+		break;
 	}
 
 	return ret;
 }
-#endif /* CONFIG_DEVICE_POWER_MANAGEMENT */
+#endif /* CONFIG_PM_DEVICE */
 
 static const struct display_driver_api st75320_api = {
 	.blanking_on = st75320_blanking_on,
@@ -549,6 +516,38 @@ static const struct display_driver_api st75320_api = {
 	.set_orientation = st75320_set_orientation,
 };
 
+		//.backlight.dev = DEVICE_DT_GET(DT_PHANDLE_BY_IDX(DT_CHILD(DT_INST_PHANDLE(inst, backlight), led0), pwms, 0)),	
+		//.backlight.channel = DT_PHA_BY_IDX(DT_CHILD(DT_INST_PHANDLE(inst, backlight), led0), pwms, 0, channel),	
+		//.backlight = DEVICE_DT_GET(DT_PHANDLE_BY_IDX(DT_CHILD(DT_INST_PHANDLE(inst, backlight), led0), pwms, 0)),	
+
+
+#define ST75320_INIT(inst)							\
+	const static struct st75320_config st75320_config_ ## inst = {		\
+		.bus = SPI_DT_SPEC_INST_GET(					\
+			inst, SPI_OP_MODE_MASTER | SPI_WORD_SET(8), 0),		\
+		.cmd_data = GPIO_DT_SPEC_INST_GET(inst, cmd_data_gpios),	\
+		.reset = GPIO_DT_SPEC_INST_GET_OR(inst, reset_gpios, {}),	\
+		.power = GPIO_DT_SPEC_INST_GET_OR(inst, power_gpios, {}),	\
+		.backlight = PWM_DT_SPEC_GET_BY_IDX(DT_INST_PHANDLE(inst, backlight), 0),	\
+		.width = DT_INST_PROP(inst, width),				\
+		.height = DT_INST_PROP(inst, height),				\
+	};									\
+										\
+	static struct st75320_data st75320_data_ ## inst = {			\
+		.x_offset = DT_INST_PROP(inst, x_offset),			\
+		.y_offset = DT_INST_PROP(inst, y_offset),			\
+	};									\
+										\
+	PM_DEVICE_DT_INST_DEFINE(inst, st75320_pm_action);	\
+										\
+	DEVICE_DT_INST_DEFINE(inst, st75320_init, PM_DEVICE_DT_INST_GET(inst),	\
+			      &st75320_data_ ## inst, &st75320_config_ ## inst,	\
+			      POST_KERNEL, CONFIG_DISPLAY_INIT_PRIORITY,	\
+			      &st75320_api);
+
+DT_INST_FOREACH_STATUS_OKAY(ST75320_INIT)
+
+/*
 #define ST75320_INIT(inst)							\
 	static struct st75320_data st75320_data_ ## inst;			\
 										\
@@ -614,6 +613,5 @@ static const struct display_driver_api st75320_api = {
 			      APPLICATION, CONFIG_ST75320_INIT_PRIORITY,	\
 			      &st75320_api);
 
-
-
 DT_INST_FOREACH_STATUS_OKAY(ST75320_INIT)
+*/

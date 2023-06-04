@@ -3,24 +3,30 @@ if ST75320
 if DISPLAY
 
 config SPI
+	bool
 	default y
 
 if LVGL
 
 config LVGL_DISPLAY_DEV_NAME
+	string
 	default "ST75320"
 
-config LVGL_HOR_RES_MAX
+config LVGL_HOR_RES_MAXy
+	int
 	default 160
 
 config LVGL_VER_RES_MAX
+	int
 	default 240
 
-choice LVGL_COLOR_DEPTH
-	default LVGL_COLOR_DEPTH_1
-endchoice
+#choice LVGL_COLOR_DEPTH
+#	int
+#	default LVGL_COLOR_DEPTH_1
+#endchoice
 
 config LVGL_BITS_PER_PIXEL
+	int
 	default 1
 
 endif # LVGL

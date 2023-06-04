@@ -20,7 +20,7 @@ void label_move(char *text, lv_coord_t sx, lv_coord_t sy, int8_t sdx, int8_t sdy
 	int8_t dx = sdx;
 	int8_t dy = sdy;
 
-	lv_obj_t *label = lv_label_create(lv_scr_act(), NULL);
+	lv_obj_t *label = lv_label_create(lv_scr_act());
 	lv_label_set_text(label, text);
 
 	while (1) {

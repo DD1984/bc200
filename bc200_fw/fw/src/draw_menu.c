@@ -20,13 +20,13 @@ static lv_style_t menu_btn_style;
 
 void menu_btn_event_cb(lv_obj_t * obj, lv_event_t event)
 {
-	if (event == LV_EVENT_PRESSED)
+	if (event.code == LV_EVENT_PRESSED)
 		LOG_INF("btn event pressed");
 }
 
 void draw_menu(void)
 {
-	lv_obj_t *list = lv_list_create(lv_scr_act(), NULL);
+	lv_obj_t *list = lv_list_create(lv_scr_act());
 	lv_obj_set_width(list, LV_HOR_RES);
 	lv_obj_set_height(list, LV_VER_RES - 20);
 
@@ -38,17 +38,17 @@ void draw_menu(void)
 	lv_indev_set_group(indev, group);
 
 	lv_style_init(&menu_btn_style);
-	lv_style_set_border_width(&menu_btn_style, LV_STATE_DEFAULT, 0);
+	lv_style_set_border_width(&menu_btn_style, 0); //???
 
-	lv_style_set_border_width(&menu_btn_style, LV_STATE_FOCUSED, 1);
-	lv_style_set_border_side(&menu_btn_style, LV_STATE_FOCUSED, LV_BORDER_SIDE_FULL);
+	lv_style_set_border_width(&menu_btn_style, 1); //???
+	lv_style_set_border_side(&menu_btn_style, LV_BORDER_SIDE_FULL);
 
-	lv_style_set_text_decor(&menu_btn_style, LV_STATE_FOCUSED, LV_TEXT_DECOR_NONE);
+	lv_style_set_text_decor(&menu_btn_style, LV_TEXT_DECOR_NONE);
 
 	for (unsigned int i = 0; i < ARRAY_SIZE(items); i++) {
 		lv_obj_t *btn = lv_list_add_btn(list, NULL, items[i]);
-		lv_obj_add_style(btn, LV_BTN_PART_MAIN, &menu_btn_style);
+		lv_obj_add_style(btn, LV_PART_MAIN, &menu_btn_style);
 
-		lv_obj_set_event_cb(btn, menu_btn_event_cb); 
+		//lv_obj_set_event_cb(btn, menu_btn_event_cb); //???
 	}
 }

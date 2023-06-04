@@ -8,7 +8,7 @@ manifest:
   projects:
     - name: sdk-nrf
       remote: nrfconnect
-      revision: 68e74a0d749ecf39aac711c1e7df34585dddec32
+      revision: 8c006d50e62d5b0b706dd177fa27935a4d7dfc05
       path: nrf
       import: true
   self:

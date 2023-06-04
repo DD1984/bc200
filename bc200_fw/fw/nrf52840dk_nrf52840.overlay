@@ -1,4 +1,8 @@
 / {
+	chosen {
+		zephyr,display = &st75320;
+	};
+
 	buttons {
 		compatible = "gpio-keys";
 		btn0: key3 {
@@ -19,29 +23,112 @@
 		};
 	};
 
-	lcd_backlight: backlight_pwmleds {
-		compatible = "pwm-leds";
-		led0 {
-			pwms = <&pwm3 0x1A>;
+	pwmleds {
+	/*	compatible = "pwm-leds";*/
+		lcd_backlight: lcd_backlight {
+			pwms = <&pwm3 0 PWM_HZ(10000) PWM_POLARITY_NORMAL>;
 		};
 	};
 };
 
+&pinctrl {
+	uart0_default: uart0_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 1, 7)>;
+		};
+	};
+
+	uart0_sleep: uart0_sleep {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 1, 7)>;
+			low-power-enable;
+		};
+	};
+
+	spi3_default: spi3_default {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+				<NRF_PSEL(SPIM_MISO, 1, 14)>,
+				<NRF_PSEL(SPIM_MOSI, 0, 31)>;
+		};
+	};
+
+	spi3_sleep: spi3_sleep {
+		group1 {
+			psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+				<NRF_PSEL(SPIM_MISO, 1, 14)>,
+				<NRF_PSEL(SPIM_MOSI, 1, 31)>;
+			low-power-enable;
+		};
+	};
+
+	pwm3_default: pwm3_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 26)>;
+			nordic,invert;
+		};
+	};
+
+	pwm3_sleep: pwm3_sleep {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 26)>;
+			low-power-enable;
+		};
+	};
+
+	qspi_default: qspi_default {
+		group1 {
+			psels = <NRF_PSEL(QSPI_SCK, 0, 0x14)>,
+
+				<NRF_PSEL(QSPI_IO0, 0, 0x16)>,
+				<NRF_PSEL(QSPI_IO1, 0, 0x18)>,
+				<NRF_PSEL(QSPI_IO2, 0, 0x10)>,
+				<NRF_PSEL(QSPI_IO3, 0, 0x17)>,
+
+				<NRF_PSEL(QSPI_CSN, 1, 0)>;
+		};
+	};
+
+	qspi_sleep: qspi_sleep {
+		group1 {
+			psels = <NRF_PSEL(QSPI_SCK, 0, 0x14)>,
+
+				<NRF_PSEL(QSPI_IO0, 0, 0x16)>,
+				<NRF_PSEL(QSPI_IO1, 0, 0x18)>,
+				<NRF_PSEL(QSPI_IO2, 0, 0x10)>,
+				<NRF_PSEL(QSPI_IO3, 0, 0x17)>;
+
+			low-power-enable;
+		};
+		group2 {
+			psels = <NRF_PSEL(QSPI_CSN, 1, 0)>;
+			low-power-enable;
+			bias-pull-up;
+		};
+	};
+};
+
+/*
 &uart0 {
 	compatible = "nordic,nrf-uart";
 	current-speed = <115200>;
 	status = "okay";
 	tx-pin = <39>;
 };
+*/
 
 &spi3 {
+/*
 	status = "okay";
+
 	sck-pin = <0x2F>;
 	miso-pin = <0xFF>;
 	mosi-pin = <0x1F>;
+*/
+
 	cs-gpios = <&gpio0 0x2 GPIO_ACTIVE_LOW>;
 
-	st75320@0 {
+	st75320: st75320@0 {
 		compatible = "sitronix,st75320";
 		label = "ST75320";
 		spi-max-frequency = <4000000>;
@@ -62,14 +149,26 @@
 
 &pwm3 {
 	status = "okay";
-	ch0-pin = <0x1A>;
+	pinctrl-0 = <&pwm3_default>;
+	pinctrl-1 = <&pwm3_sleep>;
+	pinctrl-names = "default", "sleep";
 };
 
-&qspi {
+/*
+&pwm3 {
 	status = "okay";
+	ch0-pin = <0x1A>;
+};
+*/
+
+&qspi {
+/*
+	status = "okay";
+
 	sck-pin = <0x14>;
 	io-pins = <0x16>, <0x18>, <0x10>, <0x17>;
 	csn-pins = <0x20>;
+*/
 
 	/delete-node/mx25r6435f@0;
 
