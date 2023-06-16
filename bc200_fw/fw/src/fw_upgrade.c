@@ -1,14 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <zephyr.h>
-#include <devicetree.h>
-#include <logging/log.h>
-#include <storage/flash_map.h>
-#include <usb/usb_device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/usb/usb_device.h>
 #include <ff.h>
-#include <fs/fs.h>
+#include <zephyr/fs/fs.h>
 //#include <sys/crc.h> todo: need to use system crc func
-#include <sys/reboot.h>
+#include <zephyr/sys/reboot.h>
 
 extern void uprg_progress(const char *text);
 
@@ -82,7 +81,7 @@ static void fs_init(struct fs_mount_t *mnt)
 static int upgrade(const char *file)
 {
 	int ret;
-	uint8_t buf[BLOCK_SIZE];
+	uint8_t buf[ENCODED_BLOCK_SIZE];
 
 	// encode fw and copy it to bank_1
 	unsigned short diff = START_DIFF;
@@ -103,7 +102,7 @@ static int upgrade(const char *file)
 	uint32_t crc32 = 0;
 
 	ssize_t len;
-	while ((len = fs_read(&f, buf, BLOCK_SIZE)) > 0) {
+	while ((len = fs_read(&f, buf, ENCODED_BLOCK_SIZE)) > 0) {
 		decode_block(&diff, buf, len);
 
 		flash_area_write(img1_fa, target_file_len, buf, len - 4);

@@ -6,23 +6,22 @@
 
 #include <string.h>
 
-#include <zephyr.h>
-#include <device.h>
-#include <devicetree.h>
-#include <drivers/gpio.h>
-#include <drivers/display.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/display.h>
 #include <lvgl.h>
 
 
 
 #define LOG_LEVEL /*CONFIG_LOG_DEFAULT_LEVEL*/5
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app);
 
 #define PRIORITY 6
 
 K_THREAD_STACK_DEFINE(gui_refresh_thread_stack_area, 8192);
 static struct k_thread gui_refresh_thread_data;
+K_MUTEX_DEFINE(lvgl_mutex); //lock when lv_ fuction called from other thread
 
 void gui_refresh_thread(void *dummy1, void *dummy2, void *dummy3)
 {
@@ -31,7 +30,10 @@ void gui_refresh_thread(void *dummy1, void *dummy2, void *dummy3)
 	ARG_UNUSED(dummy3);
 
 	while (1) {
+		k_mutex_lock(&lvgl_mutex, K_FOREVER);
 		lv_task_handler();
+		k_mutex_unlock(&lvgl_mutex);
+
 		k_sleep(K_MSEC(10));
 	}
 }
@@ -39,7 +41,9 @@ void gui_refresh_thread(void *dummy1, void *dummy2, void *dummy3)
 lv_obj_t *upgr_lbl;
 void uprg_progress(const char *text)
 {
+	k_mutex_lock(&lvgl_mutex, K_FOREVER);
 	lv_label_set_text(upgr_lbl, text);
+	k_mutex_unlock(&lvgl_mutex);
 }
 
 void main(void)

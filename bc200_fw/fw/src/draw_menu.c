@@ -1,10 +1,9 @@
-#include <zephyr.h>
-#include <device.h>
-#include <devicetree.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h> // device_get_binding()
 #include <lvgl.h>
 
 #define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(menu);
 
 const char *items[] = {

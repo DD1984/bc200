@@ -80,13 +80,13 @@ int decode(const char *infile, const char *outfile)
 
 	ret = 0;
 
-	unsigned char buf[BLOCK_SIZE];
+	unsigned char buf[ENCODED_BLOCK_SIZE];
 
 	unsigned short diff = START_DIFF;
 
 	size_t addr = 0;
 	ssize_t block_size;
-	while ((block_size = read(fd_in, buf, BLOCK_SIZE)) > 0) {
+	while ((block_size = read(fd_in, buf, ENCODED_BLOCK_SIZE)) > 0) {
 
 		ret = decode_block(&diff, buf, block_size);
 		if (ret)
@@ -118,13 +118,13 @@ int encode(const char *infile, const char *outfile)
 
 	ret = 0;
 
-	unsigned char buf[BLOCK_SIZE];
+	unsigned char buf[ENCODED_BLOCK_SIZE];
 
 	unsigned short diff = START_DIFF;
 
 	size_t addr = 0;
 	ssize_t block_size;
-	while ((block_size = read(fd_in, buf, BLOCK_SIZE - 4)) > 0) {
+	while ((block_size = read(fd_in, buf, ENCODED_BLOCK_SIZE - 4)) > 0) {
 
 		encode_block(&diff, buf, block_size);
 

@@ -1,4 +1,4 @@
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <lvgl.h>
 
 /* size of stack area used by each thread */

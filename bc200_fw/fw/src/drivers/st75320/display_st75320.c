@@ -11,16 +11,14 @@
 
 #define DT_DRV_COMPAT sitronix_st75320
 
-#include <zephyr.h>
-#include <device.h>
-#include <devicetree.h>
-#include <drivers/spi.h>
-#include <drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/spi.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/pm/device.h>
-#include <drivers/display.h>
-#include <drivers/pwm.h>
+#include <zephyr/drivers/display.h>
+#include <zephyr/drivers/pwm.h>
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(display_st75320, CONFIG_DISPLAY_LOG_LEVEL);
 
 #define ST75320_CMD_DISP_OFF 0xAE

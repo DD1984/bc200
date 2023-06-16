@@ -2,14 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr.h>
-#include <device.h>
-#include <drivers/gpio.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/gpio.h>
 #include <lvgl.h>
 
 #include "poll_btn.h"
 
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(poll_btns, CONFIG_POLL_BTNS_LOG_LEVEL);
 
 #define PRIORITY 7
