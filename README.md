@@ -18,8 +18,8 @@ works:
 - [x] lcd display + contrast + backlight + lvgl graphic lib
 - [x] buttons
 - [x] qspi flash + fatfs + usb mass storage
-- [x] fw upgrade via usb usign original image format. upgrade possible in both direction orig fw <-> zephyr os fw ([video of process](https://youtu.be/bRdI50IbiIM))
-- [ ] need to fix qspi flash speed
+- [x] fw upgrade via usb usign original image format (**pls downgrade fw to 1.5.3 or late first, with 1.5.9 something go wrong**). upgrade possible in both direction orig fw <-> zephyr os fw ([video of process](https://youtu.be/bRdI50IbiIM))
+- [x] qspi flash speed fixed by updating nrf sdk
 
 #### unlock debugging:
 jlink connected to SDO and SCLK testpoints  
