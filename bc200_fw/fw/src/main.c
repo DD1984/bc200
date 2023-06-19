@@ -70,6 +70,11 @@ void main(void)
 	//extern void draw_menu(void);
 	//draw_menu();
 
+	// gps power en
+	struct gpio_dt_spec gps_pwr = GPIO_DT_SPEC_GET_OR(DT_NODELABEL(gps_pwr), gpios, {0});
+	gpio_pin_configure_dt(&gps_pwr, GPIO_OUTPUT_INACTIVE);
+	gpio_pin_set_dt(&gps_pwr, 1);
+
 	upgr_lbl = lv_label_create(lv_scr_act());
 	lv_label_set_text(upgr_lbl, "hello world");
 	//lv_obj_set_pos(upgr_lbl, 0, LV_VER_RES - 10);

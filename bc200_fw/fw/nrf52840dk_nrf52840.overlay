@@ -23,6 +23,14 @@
 		};
 	};
 
+	power_en_pins {
+		compatible = "gpio-leds";
+		gps_pwr: gps_pwr {
+			gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+			label = "gps power pin";
+		};
+	};
+
 	pwmleds {
 	/*	compatible = "pwm-leds";*/
 		lcd_backlight: lcd_backlight {
@@ -41,6 +49,8 @@
 		/* cache-size == page erase size */
 		cache-size = <4096>;
 	};
+
+
 };
 
 &pinctrl {
@@ -54,6 +64,13 @@
 		group1 {
 			psels = <NRF_PSEL(UART_TX, 1, 7)>;
 			low-power-enable;
+		};
+	};
+
+	uart1_default: uart1_default {
+		group1 {
+			psels = <NRF_PSEL(UART_RX, 0, 15)>;
+			psels = <NRF_PSEL(UART_TX, 0, 17)>;
 		};
 	};
 
@@ -128,6 +145,13 @@
 	tx-pin = <39>;
 };
 */
+
+&uart1 {
+	compatible = "nordic,nrf-uarte";
+	current-speed = <9600>;
+	status = "okay";
+	pinctrl-0 = <&uart1_default>;
+};
 
 &spi3 {
 /*
